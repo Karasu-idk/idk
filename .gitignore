@@ -1,0 +1,5 @@
+pass_secret.py
+database.db
+__pycache__/
+.idea/
+report.txt
