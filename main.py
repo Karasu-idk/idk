@@ -1,8 +1,13 @@
 
-
+import asyncio
 from SQL_part import init_db
 import actions
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+from aiogram import Bot, Dispatcher, F
 
+from pass_secret import TOKEN
+bot = Bot(token=TOKEN)
 init_db()
 
 possible_choices = {
@@ -18,16 +23,23 @@ possible_choices = {
     "10": actions.choice_10
 }
 
-while True:
-    print(" ")
-    print("1 - add, 2 - show users, 3 - del,\n4 - quit, 5 - change, 6 - forgot the password"
-          "\n7 - logs, 8 - show user logs, 9 - file logs\n10 - show analitics")
+dp = Dispatcher()
+@dp.message(CommandStart())
+async def show_users(message: Message):
+    text = ("/add - add user\n"
+            "/show - show users\n"
+            "/del - delete user\n"
+            "/change - change pasw, gmail\n"
+            "/forgot - forgot the password\n"
+            "/logs - see logs\n"
+            "/show_user_logs - show user logs\n"
+            "/file_logs - file logs\n"
+            "/analitics - show analitics\n")
+    await message.answer(text)
 
-    user_choice = input("enter your choice: ")
-
-    if user_choice in possible_choices:
-        action = possible_choices[user_choice]
-        action()
-    else:
-        print("wrong choice")
-
+async def main():
+    init_db()
+    print("bot running")
+    await dp.start_polling(bot)
+if __name__ == "__main__":
+    asyncio.run(main())

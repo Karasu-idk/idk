@@ -1,11 +1,26 @@
 import sqlite3
+import asyncio
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.storage.memory import MemoryStorage
 from SQL_part import add_user, log_func, del_user, check_password_func, changing_name, changing_gmail, see_logs, \
-    show_user_log, show_users, show_analitics
+    show_user_log, show_users, show_analitics, init_db
 from mail_service import send_email
 from pass_secret import ADMIN_PASSWORD
 from sec import check_gmail, is_valid_password, hash_password
+from pass_secret import TOKEN
 
 Admin_password = (ADMIN_PASSWORD)
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+class Registration(StatesGroup):
+    name = State()
+    gmail = State()
+    password = State()
 
 def choice_1():
     set_name_input = input("enter your name: ")
@@ -154,3 +169,4 @@ def choice_9():
     print("Success")
 def choice_10():
     show_analitics()
+
