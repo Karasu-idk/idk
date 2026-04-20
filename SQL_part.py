@@ -29,7 +29,7 @@ def add_user(user_name, gmail, password):
         cursor = conn.cursor()
         cursor.execute('''INSERT into idk (user_name, gmail_id, password) VALUES (?, ?, ?)''', ( user_name, gmail, password ))
         conn.commit()
-        print(f"your name is {user_name}")
+        return True
 
 def show_users():
     with sqlite3.connect(DB_NAME) as conn:

@@ -4,7 +4,8 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from SQL_part import add_user, log_func, del_user, check_password_func, changing_name, changing_gmail, see_logs, \
     show_user_log, show_users, show_analitics, init_db
@@ -22,26 +23,88 @@ class Registration(StatesGroup):
     gmail = State()
     password = State()
 
-def choice_1():
-    set_name_input = input("enter your name: ")
-    set_gmail_input = input("enter your gmail: ")
-    if check_gmail(set_gmail_input):
-        clean_password = is_valid_password()
-        hashed = hash_password(clean_password)
-        try:
-            add_user(set_name_input, set_gmail_input, hashed)
-            with sqlite3.connect('database.db') as conn:
-                conn.execute("PRAGMA foreign_keys = ON")
-                cursor = conn.cursor()
-                cursor.execute('''SELECT user_id FROM idk WHERE user_name = ?''', (set_name_input,))
-                result = cursor.fetchone()
-                if result:
-                    fetched_id = result[0]
-                    log_func(fetched_id, "Was added")
-        except sqlite3.IntegrityError:
-            print("user already exists")
+@dp.message(CommandStart())
+async def show_users(message: Message):
+    text = ("/add - add user\n"
+            "/show - show users\n"
+            "/del - delete user\n"
+            "/change - change pasw, gmail\n"
+            "/forgot - forgot the password\n"
+            "/logs - see logs\n"
+            "/show_user_logs - show user logs\n"
+            "/file_logs - file logs\n"
+            "/analitics - show analitics\n")
+    await message.answer(text)
+
+@dp.message(Command('add'))
+async def start_add_user(message: Message, state: FSMContext):
+    await state.set_state(Registration.name)
+    await message.answer("Enter your name")
+@dp.message(Registration.name)
+async def process_name(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    await message.answer("Enter your gmail")
+    await state.set_state(Registration.gmail)
+@dp.message(Registration.gmail)
+async def get_gmail(message: Message, state: FSMContext):
+    if check_gmail(message.text):
+        await state.update_data(gmail=message.text)
+        await message.answer("Enter your password")
+        await state.set_state(Registration.password)
     else:
-        print("wrong email")
+        await message.answer("wrong gmail")
+@dp.message(Registration.password)
+async def get_password(message: Message, state: FSMContext):
+    if len(message.text) > 7:
+        checked_password = is_valid_password(message.text)
+        if checked_password is None:
+            await message.answer("Password is too easy! Use upper, lower letters and digits")
+            return
+        else:
+            await state.update_data(password=message.text)
+            user_data = await state.get_data()
+            name = user_data.get("name")
+            gmail = user_data.get("gmail")
+            password = user_data.get("password")
+            hashed = hash_password(password)
+            try:
+                if add_user(name,gmail, hashed):
+                    await message.answer(f"Successfully added {name}")
+                with sqlite3.connect('database.db') as conn:
+                    conn.execute("PRAGMA foreign_keys = ON")
+                    cursor = conn.cursor()
+                    cursor.execute('''SELECT user_id FROM idk WHERE user_name = ?''', (name,))
+                    result = cursor.fetchone()
+                    if result:
+                        fetched_id = result[0]
+                        log_func(fetched_id, "Was added")
+            except sqlite3.IntegrityError:
+                await message.answer("user already exists")
+            await state.clear()
+    else:
+        await message.answer("password too short")
+        return
+
+#def choice_1():
+#    set_name_input = input("enter your name: ")
+#    set_gmail_input = input("enter your gmail: ")
+#    if check_gmail(set_gmail_input):
+#        clean_password = is_valid_password()
+#        hashed = hash_password(clean_password)
+#        try:
+#            add_user(set_name_input, set_gmail_input, hashed)
+#            with sqlite3.connect('database.db') as conn:
+#                conn.execute("PRAGMA foreign_keys = ON")
+#                cursor = conn.cursor()
+#                cursor.execute('''SELECT user_id FROM idk WHERE user_name = ?''', (set_name_input,))
+#                result = cursor.fetchone()
+#                if result:
+#                    fetched_id = result[0]
+#                    log_func(fetched_id, "Was added")
+#        except sqlite3.IntegrityError:
+#            print("user already exists")
+#    else:
+#        print("wrong email")
 
 def choice_2():
     show_users()
@@ -170,3 +233,9 @@ def choice_9():
 def choice_10():
     show_analitics()
 
+async def main():
+    init_db()
+    print("bot running")
+    await dp.start_polling(bot)
+if __name__ == "__main__":
+    asyncio.run(main())
