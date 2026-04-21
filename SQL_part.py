@@ -37,13 +37,14 @@ def show_users():
         cursor.execute(''' SELECT * FROM idk ''')
         users = cursor.fetchall()
         if not users:
-            print("no users")
-            return
+            return "No users"
+        response = "list of users\n"
         for user in users:
-            print("-" * 20)
-            print(f"Id: {user[0]}")
-            print(f"user name: {user[1]}")
-            print(f"gmail: {user[2]}")
+            response += (f"Id: {user[0]}\n")
+            response += (f"Name: {user[1]}\n")
+            response += (f"Gmail: {user[2]}\n")
+            response += ("-------------------------\n")
+        return response
 
 def del_user(user_name):
     with sqlite3.connect(DB_NAME) as conn:

@@ -24,7 +24,7 @@ class Registration(StatesGroup):
     password = State()
 
 @dp.message(CommandStart())
-async def show_users(message: Message):
+async def show_commands(message: Message):
     text = ("/add - add user\n"
             "/show - show users\n"
             "/del - delete user\n"
@@ -85,29 +85,11 @@ async def get_password(message: Message, state: FSMContext):
         await message.answer("password too short")
         return
 
-#def choice_1():
-#    set_name_input = input("enter your name: ")
-#    set_gmail_input = input("enter your gmail: ")
-#    if check_gmail(set_gmail_input):
-#        clean_password = is_valid_password()
-#        hashed = hash_password(clean_password)
-#        try:
-#            add_user(set_name_input, set_gmail_input, hashed)
-#            with sqlite3.connect('database.db') as conn:
-#                conn.execute("PRAGMA foreign_keys = ON")
-#                cursor = conn.cursor()
-#                cursor.execute('''SELECT user_id FROM idk WHERE user_name = ?''', (set_name_input,))
-#                result = cursor.fetchone()
-#                if result:
-#                    fetched_id = result[0]
-#                    log_func(fetched_id, "Was added")
-#        except sqlite3.IntegrityError:
-#            print("user already exists")
-#    else:
-#        print("wrong email")
 
-def choice_2():
-    show_users()
+@dp.message(Command('show'))
+async def show_user_command(message: Message):
+    user_list = show_users()
+    await message.answer(user_list)
 
 def choice_3():
     attempts = 0
