@@ -1,12 +1,10 @@
 
 import asyncio
-from SQL_part import init_db
+from SQL_part import init_db, see_logs
 import logging
 logging.basicConfig(level=logging.INFO)
 from actions import dp, bot
 init_db()
-
-
 
 async def main():
     init_db()

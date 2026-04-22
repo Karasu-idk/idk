@@ -48,12 +48,14 @@ def show_users():
 
 def del_user(user_name):
     with sqlite3.connect(DB_NAME) as conn:
+        conn.execute('PRAGMA foreign_keys = ON')
         cursor = conn.cursor()
         cursor.execute('''DELETE FROM idk WHERE user_name = ?''', (user_name,))
+        conn.commit()
         if cursor.rowcount > 0:
-            print(f"successfully deleted {user_name}")
+            return f"user {user_name} has been deleted"
         else:
-            print(f"no {user_name} in database")
+            return f"user {user_name} does not exist"
 
 def check_password_func(name):
     with sqlite3.connect(DB_NAME) as conn:

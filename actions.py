@@ -1,6 +1,8 @@
 import sqlite3
 import asyncio
+
 from aiogram import Bot, Dispatcher, F
+from aiogram.dispatcher.middlewares import data
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -22,6 +24,10 @@ class Registration(StatesGroup):
     name = State()
     gmail = State()
     password = State()
+
+class Delete(StatesGroup):
+    waiting_for_pass = State()
+    waiting_for_name = State()
 
 @dp.message(CommandStart())
 async def show_commands(message: Message):
@@ -91,31 +97,35 @@ async def show_user_command(message: Message):
     user_list = show_users()
     await message.answer(user_list)
 
-def choice_3():
-    attempts = 0
-    while True:
-        if attempts > 3:
-            print("sorry, you are out of attempts")
-            break
-        user_admpassword = input("enter your password: ")
-        if user_admpassword == Admin_password:
-            with sqlite3.connect('database.db') as conn:
-                cursor = conn.cursor()
-                cursor.execute(''' SELECT * FROM idk ''')
-                users = cursor.fetchall()
-                if not users:
-                    print("no users")
-                    return
-                for user in users:
-                    print("-" * 20)
-                    print(f"Id: {user[0]}")
-                    print(f"user name: {user[1]}")
-            name_to_del = input("enter user name: ")
-            del_user(name_to_del)
-            break
-        else:
-            print("wrong password")
-            attempts += 1
+@dp.message(Command('del'))
+async def delete_user(message: Message, state: FSMContext):
+    await state.update_data(attempts=0)
+    await state.set_state(Delete.waiting_for_pass)
+    await message.answer("Enter admin password")
+@dp.message(Delete.waiting_for_pass)
+async def check_adm_passw(message: Message, state: FSMContext):
+    data = await state.get_data()
+    attempts = data.get('attempts', 0)
+    if message.text == Admin_password:
+        await message.answer("Password is correct\nchoose name to del:")
+        choose_user_list = show_users()
+        await message.answer(choose_user_list)
+        await state.set_state(Delete.waiting_for_name)
+    else:
+        attempts += 1
+        await state.update_data(attempts=attempts)
+        await message.answer(f"Wrong password, attempts: {3 - attempts} ")
+    if attempts >= 3:
+        await message.answer("to many attempts")
+        await state.clear()
+@dp.message(Delete.waiting_for_name)
+async def check_name(message: Message, state: FSMContext):
+    name_to_del = message.text
+    result_message = del_user(name_to_del)
+    await message.answer(result_message)
+    await state.clear()
+
+
 
 def choice_5():
     user_choice = input("1 - change name, 2 - change gmail, 3 - exit ")
