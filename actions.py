@@ -200,35 +200,6 @@ async def change_gmail(message: Message, state: FSMContext):
     else:
         await message.answer("Wrong gmail")
         await state.clear()
-#def choice_5():
-#    user_choice = input("1 - change name, 2 - change gmail, 3 - exit ")
-#    if user_choice == "1":
-#        name = input("enter your name: ")
-#        if check_password_func(name):
-#            new_name = input("enter new name: ")
-#            if changing_name(name, new_name):
-#                print(f"Success, new name: {new_name}")
-#            else:
-#                print("User already exists")
-#        else:
-#            print("wrong password")
-#    elif user_choice == "2":
-#        name = input("enter your name: ")
-#        if check_password_func(name):
-#            new_gmail = input("enter new gmail: ")
-#            if check_gmail(new_gmail):
-#                if changing_gmail(name, new_gmail):
-#                    print(f"Success, new gmail: {new_gmail}")
-#                else:
-#                    print("gmail already exists")
-#            else:
-#                print("wrong gmail")
-#        else:
-#            print("wrong password")
-#    elif user_choice == "3":
-#        return
-#    else:
-#        print("wrong choice")
 
 def choice_6():
     user_name = input("enter your name or exit: ")
