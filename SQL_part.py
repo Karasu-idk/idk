@@ -63,23 +63,9 @@ def check_password_func(name):
         cursor.execute(''' SELECT password FROM idk WHERE user_name = ? ''', (name,))
         db_result = cursor.fetchone()
         if not db_result:
-            print("no user")
-            return
+            return None
         else:
-            attempts = 0
-            db_password = db_result[0]
-            while True:
-                if attempts > 3:
-                    print("sorry, you are out of attempts")
-                    break
-                user_input = input("enter your password: ")
-                if hash_password(user_input) == db_password:
-                    print("your password is correct")
-                    return True
-                else:
-                    print("wrong password")
-                    attempts += 1
-            return False
+            return db_result[0]
 
 def changing_name(old_name, new_name):
     with sqlite3.connect(DB_NAME) as conn:

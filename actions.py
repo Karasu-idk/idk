@@ -20,6 +20,13 @@ Admin_password = (ADMIN_PASSWORD)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+class Change(StatesGroup):
+    choosing_option = State()
+    waiting_for_old_name = State()
+    waiting_for_pass = State()
+    name_to_change = State()
+    gmail_to_change = State()
+
 class Registration(StatesGroup):
     name = State()
     gmail = State()
@@ -125,37 +132,103 @@ async def check_name(message: Message, state: FSMContext):
     await message.answer(result_message)
     await state.clear()
 
-
-
-def choice_5():
-    user_choice = input("1 - change name, 2 - change gmail, 3 - exit ")
-    if user_choice == "1":
-        name = input("enter your name: ")
-        if check_password_func(name):
-            new_name = input("enter new name: ")
-            if changing_name(name, new_name):
-                print(f"Success, new name: {new_name}")
-            else:
-                print("User already exists")
-        else:
-            print("wrong password")
-    elif user_choice == "2":
-        name = input("enter your name: ")
-        if check_password_func(name):
-            new_gmail = input("enter new gmail: ")
-            if check_gmail(new_gmail):
-                if changing_gmail(name, new_gmail):
-                    print(f"Success, new gmail: {new_gmail}")
-                else:
-                    print("gmail already exists")
-            else:
-                print("wrong gmail")
-        else:
-            print("wrong password")
-    elif user_choice == "3":
-        return
+@dp.message(Command('change'))
+async def what_to_change(message: Message, state: FSMContext):
+    await message.answer("1 - change name, 2 - change gmail, 3 - exit")
+    await state.set_state(Change.choosing_option)
+@dp.message(Change.choosing_option)
+async def choose_option(message: Message, state: FSMContext):
+    if message.text == "1" or message.text.lower() == "change name":
+        await message.answer("Enter your name")
+        await state.set_state(Change.waiting_for_old_name)
+        await state.update_data(mode="change name")
+    elif message.text == "2" or message.text.lower() == "change gmail":
+        await message.answer("Enter your name")
+        await state.set_state(Change.waiting_for_old_name)
+        await state.update_data(mode="change gmail")
+    elif message.text == "3" or message.text.lower() == "exit":
+        await state.clear()
+@dp.message(Change.waiting_for_old_name)
+async def check_old_name(message: Message, state: FSMContext):
+    await state.update_data(old_name=message.text)
+    await state.set_state(Change.waiting_for_pass)
+    await message.answer("Enter your password")
+@dp.message(Change.waiting_for_pass)
+async def check_pass(message: Message, state: FSMContext):
+    data = await state.get_data()
+    old_name = data.get('old_name')
+    attempts = data.get('attempts', 0)
+    mode = data.get('mode')
+    db_password = check_password_func(old_name)
+    if hash_password(message.text) == db_password:
+        await message.answer("Password is correct")
+        if mode == "change name":
+            await state.set_state(Change.name_to_change)
+            await message.answer("Enter your new name")
+        elif mode == "change gmail":
+            await state.set_state(Change.gmail_to_change)
+            await message.answer("Enter your new gmail")
     else:
-        print("wrong choice")
+        await message.answer("Wrong password")
+        attempts += 1
+        await state.update_data(attempts=attempts)
+    if attempts >= 3:
+        await message.answer("to many attempts")
+        await state.clear()
+@dp.message(Change.name_to_change)
+async def change_name(message: Message, state: FSMContext):
+    new_name = message.text
+    data = await state.get_data()
+    old_name = data.get('old_name')
+    if changing_name(old_name, new_name):
+        await message.answer(f"Successfully changed your name to {new_name}")
+        await state.clear()
+    else:
+        await message.answer(f"User already exists")
+        await state.clear()
+@dp.message(Change.gmail_to_change)
+async def change_gmail(message: Message, state: FSMContext):
+    new_gmail = message.text
+    data = await state.get_data()
+    old_name = data.get('old_name')
+    if check_gmail(message.text):
+        if changing_gmail(old_name, new_gmail):
+            await message.answer(f"Successfully changed your gmail to {new_gmail}")
+            await state.clear()
+        else:
+            await message.answer(f"gmail already exists")
+    else:
+        await message.answer("Wrong gmail")
+        await state.clear()
+#def choice_5():
+#    user_choice = input("1 - change name, 2 - change gmail, 3 - exit ")
+#    if user_choice == "1":
+#        name = input("enter your name: ")
+#        if check_password_func(name):
+#            new_name = input("enter new name: ")
+#            if changing_name(name, new_name):
+#                print(f"Success, new name: {new_name}")
+#            else:
+#                print("User already exists")
+#        else:
+#            print("wrong password")
+#    elif user_choice == "2":
+#        name = input("enter your name: ")
+#        if check_password_func(name):
+#            new_gmail = input("enter new gmail: ")
+#            if check_gmail(new_gmail):
+#                if changing_gmail(name, new_gmail):
+#                    print(f"Success, new gmail: {new_gmail}")
+#                else:
+#                    print("gmail already exists")
+#            else:
+#                print("wrong gmail")
+#        else:
+#            print("wrong password")
+#    elif user_choice == "3":
+#        return
+#    else:
+#        print("wrong choice")
 
 def choice_6():
     user_name = input("enter your name or exit: ")
