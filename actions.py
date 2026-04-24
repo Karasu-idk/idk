@@ -264,39 +264,6 @@ async def forgot_new_password(message: Message, state: FSMContext):
         await message.answer("to many attempts")
         await state.clear()
 
-
-
-
-
-
-
-#def choice_6():
-#    user_name = input("enter your name or exit: ")
-#    if user_name == "exit":
-#        return
-#    else:
-#        sent_code = send_email(user_name)
-#        if sent_code:
-#            check_code = input("enter your verification code: ")
-#            if check_code == sent_code:
-#                print("Success")
-#                clean_password = is_valid_password()
-#                hashed = hash_password(clean_password)
-#                with sqlite3.connect('database.db') as conn:
-#                    cursor = conn.cursor()
-#                    cursor.execute('''UPDATE idk SET password = ? WHERE user_name = ?  ''', (hashed, user_name))
-#                    conn.commit()
-#                    print(f"password changed please remember it")
-#                    cursor.execute('''SELECT user_id FROM idk WHERE user_name = ?''', (user_name, ))
-#                    result = cursor.fetchone()
-#                    if result:
-#                        fetched_id = result[0]
-#                        log_func(fetched_id, "Reseted passw")
-#            else:
-#                print("wrong code")
-#        else:
-#            print("Failed to send email or user not found")
-
 def choice_7():
     attempts = 0
     while True:
