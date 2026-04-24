@@ -10,7 +10,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from SQL_part import add_user, log_func, del_user, check_password_func, changing_name, changing_gmail, see_logs, \
-    show_user_log, show_users, show_analitics, init_db
+    show_user_log, show_users, show_analitics, init_db, reset_passw
 from mail_service import send_email
 from pass_secret import ADMIN_PASSWORD
 from sec import check_gmail, is_valid_password, hash_password
@@ -201,32 +201,101 @@ async def change_gmail(message: Message, state: FSMContext):
         await message.answer("Wrong gmail")
         await state.clear()
 
-def choice_6():
-    user_name = input("enter your name or exit: ")
-    if user_name == "exit":
-        return
+class Forgot(StatesGroup):
+    name = State()
+    check_code = State()
+    new_password = State()
+
+@dp.message(Command('forgot'))
+async def forgot_func(message: Message, state: FSMContext):
+    await message.answer("Enter your name or exit")
+    await state.set_state(Forgot.name)
+@dp.message(Forgot.name)
+async def forgot(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    if message.text == "exit":
+        await state.clear()
     else:
-        sent_code = send_email(user_name)
+        data = await state.get_data()
+        name = data.get('name')
+        sent_code = send_email(name)
+        await state.update_data(sent_code=sent_code)
         if sent_code:
-            check_code = input("enter your verification code: ")
-            if check_code == sent_code:
-                print("Success")
-                clean_password = is_valid_password()
-                hashed = hash_password(clean_password)
-                with sqlite3.connect('database.db') as conn:
-                    cursor = conn.cursor()
-                    cursor.execute('''UPDATE idk SET password = ? WHERE user_name = ?  ''', (hashed, user_name))
-                    conn.commit()
-                    print(f"password changed please remember it")
-                    cursor.execute('''SELECT user_id FROM idk WHERE user_name = ?''', (user_name, ))
-                    result = cursor.fetchone()
-                    if result:
-                        fetched_id = result[0]
-                        log_func(fetched_id, "Reseted passw")
-            else:
-                print("wrong code")
+            await state.set_state(Forgot.check_code)
+            await message.answer(f"Successfully sent email")
+@dp.message(Forgot.check_code)
+async def forgot_check_code(message: Message, state: FSMContext):
+    data = await state.get_data()
+    code = data.get('sent_code')
+    attempts = data.get('attempts', 0)
+    if message.text == code:
+        await message.answer("Correct code")
+        await state.set_state(Forgot.new_password)
+        await message.answer("Enter new password, it must be >7 have upper and lower case letters and numbers")
+        await state.update_data(attempts=0)
+    else:
+        if attempts >= 3:
+            await message.answer("to many attempts")
+            await state.clear()
         else:
-            print("Failed to send email or user not found")
+            await message.answer("Wrong code, try again")
+            attempts += 1
+            await state.update_data(attempts=attempts)
+
+
+@dp.message(Forgot.new_password)
+async def forgot_new_password(message: Message, state: FSMContext):
+    await state.update_data(new_password=message.text)
+    data = await state.get_data()
+    new_password = data.get('new_password')
+    name = data.get('name')
+    attempts = data.get('attempts', 0)
+    clean_password = is_valid_password(new_password)
+    if clean_password is None:
+        await message.answer("password is too easy, try again")
+        attempts += 1
+        await state.update_data(attempts=attempts)
+    else:
+        hashed = hash_password(new_password)
+        reset_passw(hashed, name)
+        await message.answer(f"Password has been reset")
+        await state.clear()
+    if attempts >= 3:
+        await message.answer("to many attempts")
+        await state.clear()
+
+
+
+
+
+
+
+#def choice_6():
+#    user_name = input("enter your name or exit: ")
+#    if user_name == "exit":
+#        return
+#    else:
+#        sent_code = send_email(user_name)
+#        if sent_code:
+#            check_code = input("enter your verification code: ")
+#            if check_code == sent_code:
+#                print("Success")
+#                clean_password = is_valid_password()
+#                hashed = hash_password(clean_password)
+#                with sqlite3.connect('database.db') as conn:
+#                    cursor = conn.cursor()
+#                    cursor.execute('''UPDATE idk SET password = ? WHERE user_name = ?  ''', (hashed, user_name))
+#                    conn.commit()
+#                    print(f"password changed please remember it")
+#                    cursor.execute('''SELECT user_id FROM idk WHERE user_name = ?''', (user_name, ))
+#                    result = cursor.fetchone()
+#                    if result:
+#                        fetched_id = result[0]
+#                        log_func(fetched_id, "Reseted passw")
+#            else:
+#                print("wrong code")
+#        else:
+#            print("Failed to send email or user not found")
 
 def choice_7():
     attempts = 0

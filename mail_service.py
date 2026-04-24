@@ -13,7 +13,6 @@ def send_email(name):
         cursor.execute('''SELECT gmail_id FROM idk WHERE user_name = ? ''', (name,))
         result = cursor.fetchone()
         if not result:
-            print("no gmail in base")
             return
         elif result:
             reciver_email = result[0]
@@ -25,9 +24,9 @@ def send_email(name):
             msg['To'] = reciver_email
             try:
                 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                    server.set_debuglevel(1)
                     server.login(sender_email, email_sender_password)
                     server.send_message(msg)
-                    print(f"verification code sent to {reciver_email}")
                     return code
             except Exception as e:
                 print(f"error {e}")

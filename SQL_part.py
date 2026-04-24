@@ -95,6 +95,16 @@ def log_func(user_id, action):
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO logs (user_id, action) VALUES (?, ?)''', (user_id, action))
         conn.commit()
+def reset_passw(hashed, user_name):
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''UPDATE idk SET password = ? WHERE user_name = ?  ''', (hashed, user_name))
+        conn.commit()
+        cursor.execute('''SELECT user_id FROM idk WHERE user_name = ?''', (user_name, ))
+        result = cursor.fetchone()
+        if result:
+            fetched_id = result[0]
+            log_func(fetched_id, "Reseted passw")
 
 def see_logs():
     with sqlite3.connect(DB_NAME) as conn:
