@@ -1,8 +1,6 @@
 import sqlite3
 import asyncio
-
 from aiogram import Bot, Dispatcher, F
-from aiogram.dispatcher.middlewares import data
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -36,17 +34,26 @@ class Delete(StatesGroup):
     waiting_for_pass = State()
     waiting_for_name = State()
 
+class Forgot(StatesGroup):
+    name = State()
+    check_code = State()
+    new_password = State()
+
+class SeeLogs_class(StatesGroup):
+    check_password = State()
+    check_password_for_user = State()
+    wait_for_name = State()
+
 @dp.message(CommandStart())
 async def show_commands(message: Message):
     text = ("/add - add user\n"
             "/show - show users\n"
             "/del - delete user\n"
-            "/change - change pasw, gmail\n"
+            "/change - change name gmail\n"
             "/forgot - forgot the password\n"
-            "/logs - see logs\n"
+            "/see_logs - see logs\n"
             "/show_user_logs - show user logs\n"
-            "/file_logs - file logs\n"
-            "/analitics - show analitics\n")
+            "/show_analytics - show analytics\n")
     await message.answer(text)
 
 @dp.message(Command('add'))
@@ -201,11 +208,6 @@ async def change_gmail(message: Message, state: FSMContext):
         await message.answer("Wrong gmail")
         await state.clear()
 
-class Forgot(StatesGroup):
-    name = State()
-    check_code = State()
-    new_password = State()
-
 @dp.message(Command('forgot'))
 async def forgot_func(message: Message, state: FSMContext):
     await message.answer("Enter your name or exit")
@@ -237,6 +239,7 @@ async def forgot_check_code(message: Message, state: FSMContext):
         if attempts >= 3:
             await message.answer("to many attempts")
             await state.clear()
+            return
         else:
             await message.answer("Wrong code, try again")
             attempts += 1
@@ -262,10 +265,7 @@ async def forgot_new_password(message: Message, state: FSMContext):
     if attempts >= 3:
         await message.answer("to many attempts")
         await state.clear()
-class SeeLogs_class(StatesGroup):
-    check_password = State()
-    check_password_for_user = State()
-    wait_for_name = State()
+
 @dp.message(Command('see_logs'))
 async def see_logs_check_pass(message: Message, state: FSMContext):
     await message.answer("Enter admin password")
