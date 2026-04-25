@@ -242,7 +242,6 @@ async def forgot_check_code(message: Message, state: FSMContext):
             attempts += 1
             await state.update_data(attempts=attempts)
 
-
 @dp.message(Forgot.new_password)
 async def forgot_new_password(message: Message, state: FSMContext):
     await state.update_data(new_password=message.text)
@@ -263,20 +262,30 @@ async def forgot_new_password(message: Message, state: FSMContext):
     if attempts >= 3:
         await message.answer("to many attempts")
         await state.clear()
+class SeeLogs_class(StatesGroup):
+    check_password = State()
+@dp.message(Command('see_logs'))
+async def see_logs_check_pass(message: Message, state: FSMContext):
+    await message.answer("Enter admin password")
+    await state.set_state(SeeLogs_class.check_password)
+    await state.update_data(attempts=0)
+@dp.message(SeeLogs_class.check_password)
+async def see_logs_command(message: Message, state: FSMContext):
+    data = await state.get_data()
+    attempts = data.get('attempts', 0)
+    if attempts >= 3:
+        await message.answer("to many attempts")
+        await state.clear()
+        return
+    if message.text == Admin_password:
+        logs_list = see_logs()
+        await message.answer(logs_list)
+        await state.clear()
+    else:
+        attempts += 1
+        await message.answer("wrong password")
+        await state.update_data(attempts=attempts)
 
-def choice_7():
-    attempts = 0
-    while True:
-        if attempts > 3:
-            print("sorry, you are out of attempts")
-            break
-        user_admpassword = input("enter your password: ")
-        if user_admpassword == Admin_password:
-            see_logs()
-            return
-        else:
-            print("wrong password")
-            attempts += 1
 
 def choice_8():
     attempts = 0

@@ -112,14 +112,15 @@ def see_logs():
         cursor.execute('''SELECT * FROM logs''')
         result = cursor.fetchall()
         if not result:
-            print("no logs")
-            return
+            return "no logs"
         else:
+            response = "list of logs\n"
             for row in result:
-                print("-" * 20)
-                print(f"Num {row[0]}")
-                print(f"user ID: {row[1]}")
-                print(f"Action: {row[2]}")
+                response += (f"Num {row[0]}\n")
+                response += (f"user ID: {row[1]}\n")
+                response += (f"Action: {row[2]}\n")
+                response += ("---------------------\n")
+            return response
 
 def show_user_log(name):
     with sqlite3.connect(DB_NAME) as conn:
