@@ -264,6 +264,8 @@ async def forgot_new_password(message: Message, state: FSMContext):
         await state.clear()
 class SeeLogs_class(StatesGroup):
     check_password = State()
+    check_password_for_user = State()
+    wait_for_name = State()
 @dp.message(Command('see_logs'))
 async def see_logs_check_pass(message: Message, state: FSMContext):
     await message.answer("Enter admin password")
@@ -286,21 +288,31 @@ async def see_logs_command(message: Message, state: FSMContext):
         await message.answer("wrong password")
         await state.update_data(attempts=attempts)
 
-
-def choice_8():
-    attempts = 0
-    while True:
-        if attempts > 3:
-            print("sorry, you are out of attempts")
-            break
-        user_admpassword = input("enter your password: ")
-        if user_admpassword == Admin_password:
-            user_name = input("enter name: ")
-            show_user_log(user_name)
-            return
-        else:
-            print("wrong password")
-            attempts += 1
+@dp.message(Command('show_user_logs'))
+async def show_user_logs_handler(message: Message, state: FSMContext):
+    await message.answer("Enter admin password")
+    await state.update_data(attempts=0)
+    await state.set_state(SeeLogs_class.check_password_for_user)
+@dp.message(SeeLogs_class.check_password_for_user)
+async def show_user_logs_pass(message: Message, state: FSMContext):
+    data = await state.get_data()
+    attempts = data.get('attempts', 0)
+    if attempts >= 3:
+        await message.answer("to many attempts")
+        await state.clear()
+        return
+    if message.text == Admin_password:
+        await message.answer("Enter user name")
+        await state.set_state(SeeLogs_class.wait_for_name)
+    else:
+        await message.answer("wrong password")
+        attempts += 1
+        await state.update_data(attempts=attempts)
+@dp.message(SeeLogs_class.wait_for_name)
+async def show_user_logs_name(message: Message, state: FSMContext):
+    user_logs_result = show_user_log(message.text)
+    await message.answer(user_logs_result)
+    await state.clear()
 
 def choice_9():
     with sqlite3.connect('database.db') as conn:

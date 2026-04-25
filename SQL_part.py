@@ -133,11 +133,14 @@ def show_user_log(name):
         ''', (name,))
         result = cursor.fetchall()
         if not result:
-            print("no logs")
-            return
+            return "no logs"
         else:
+            response = "list of logs\n"
             for row in result:
-                print(row)
+                response += (f"Name {row[0]}\n")
+                response += (f"Action: {row[1]}\n")
+                response += (f"Timestamp: {row[2]}\n")
+            return response
 
 def show_analitics():
     with sqlite3.connect(DB_NAME) as conn:
