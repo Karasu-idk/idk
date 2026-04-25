@@ -142,10 +142,17 @@ def show_user_log(name):
                 response += (f"Timestamp: {row[2]}\n")
             return response
 
-def show_analitics():
+def show_analytics():
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
         cursor.execute('''SELECT COUNT(user_id) FROM idk''')
-        result = cursor.fetchone()
-
-        print("Total users:", result[0])
+        result_users = cursor.fetchone()
+        cursor.execute('''SELECT COUNT(*) FROM logs WHERE action = "Reseted passw"''')
+        result_actions = cursor.fetchone()
+        cursor.execute('''SELECT COUNT(*) FROM logs WHERE date(timestamp) = date("now")''')
+        result_dates = cursor.fetchone()
+        response = "analytics\n"
+        response += f"Total users: {result_users[0]}\n"
+        response += f"Total password resets: {result_actions[0]}\n"
+        response += f"Actions today: {result_dates[0]}\n"
+        response += "-------------------------\n"
