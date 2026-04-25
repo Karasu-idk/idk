@@ -10,7 +10,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from SQL_part import add_user, log_func, del_user, check_password_func, changing_name, changing_gmail, see_logs, \
-    show_user_log, show_users, show_analitics, init_db, reset_passw
+    show_user_log, show_users, show_analytics, init_db, reset_passw
 from mail_service import send_email
 from pass_secret import ADMIN_PASSWORD
 from sec import check_gmail, is_valid_password, hash_password
@@ -314,6 +314,10 @@ async def show_user_logs_name(message: Message, state: FSMContext):
     await message.answer(user_logs_result)
     await state.clear()
 
+@dp.message(Command('show_analytics'))
+async def show_analytics_handler(message: Message):
+    result = show_analytics()
+    await message.answer(result)
 def choice_9():
     with sqlite3.connect('database.db') as conn:
         cursor = conn.cursor()
@@ -323,5 +327,3 @@ def choice_9():
             for row in result:
                 file.write(f"log: {row}\n")
     print("Success")
-def choice_10():
-    show_analitics()

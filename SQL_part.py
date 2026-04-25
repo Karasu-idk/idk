@@ -155,4 +155,4 @@ def show_analytics():
         response += f"Total users: {result_users[0]}\n"
         response += f"Total password resets: {result_actions[0]}\n"
         response += f"Actions today: {result_dates[0]}\n"
-        response += "-------------------------\n"
+        return response
